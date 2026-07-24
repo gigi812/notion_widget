@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ontherocks</title>
+<title>Image Carousel</title>
 <style>
   :root {
     --dot: #d9d9d9;
@@ -13,17 +13,21 @@
     --frame-radius: 12px;
     --gap: 12px;
     --visible: 3; /* 데스크톱: 한 번에 3장 */
+    --frame-height: 320px; /* 프레임 고정 높이. 필요하면 이 숫자만 조절하세요 */
   }
 
   @media (max-width: 640px) {
-    :root { --visible: 1; } /* 모바일: 한 번에 1장 */
+    :root {
+      --visible: 1; /* 모바일: 한 번에 1장 */
+      --frame-height: 420px; /* 모바일에서 보여줄 고정 높이 */
+    }
   }
 
   * { box-sizing: border-box; }
 
   body {
     margin: 0;
-    background: transparent; /* 배경 없음 */
+    background: transparent;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     display: flex;
     align-items: center;
@@ -33,22 +37,23 @@
 
   .carousel {
     width: 100%;
-    max-width: 900px; /* 데스크톱에서 3장 보여줄 만큼 넓게 */
+    max-width: 900px;
     margin: 0 auto;
     position: relative;
   }
 
- .carousel-frame {
-  position: relative;
-  width: 100%;
-  height: 420px;
-  overflow: hidden;
-  border-radius: var(--frame-radius);
-}
+  .carousel-frame {
+    position: relative;
+    width: 100%;
+    height: var(--frame-height); /* 너비가 바뀌어도 높이는 고정 */
+    overflow: hidden;
+    border-radius: var(--frame-radius);
+  }
 
   .carousel-track {
     display: flex;
     gap: var(--gap);
+    height: 100%;
     touch-action: pan-y;
     cursor: grab;
   }
@@ -57,21 +62,23 @@
     cursor: grabbing;
   }
 
- .carousel-slide {
-  flex: 0 0 calc((100% - (var(--visible) - 1) * var(--gap)) / var(--visible));
-  height: 100%;
-  border-radius: var(--frame-radius);
-  overflow: hidden;
-  background: transparent;
-}
-.carousel-slide img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
-  pointer-events: none;
-  -webkit-user-drag: none;
-}
+  .carousel-slide {
+    flex: 0 0 calc((100% - (var(--visible) - 1) * var(--gap)) / var(--visible));
+    height: 100%; /* aspect-ratio 대신 프레임 높이를 그대로 따라감 */
+    border-radius: var(--frame-radius);
+    overflow: hidden;
+    background: transparent;
+  }
+
+  .carousel-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* 잘리지 않고 비율 유지하며 프레임 안에 맞춰짐 */
+    display: block;
+    pointer-events: none;
+    -webkit-user-drag: none;
+  }
+
   .carousel-arrow {
     position: absolute;
     top: 50%;
@@ -144,7 +151,6 @@
     <div class="carousel-frame">
       <div class="carousel-track" id="carouselTrack">
         <!-- 이미지 3~5장: src만 교체하세요 -->
-        
         <div class="carousel-slide"><img src="./images/4.jpg" alt="slide 1"></div>
         <div class="carousel-slide"><img src="./images/5.jpg" alt="slide 2"></div>
         <div class="carousel-slide"><img src="./images/6.jpg" alt="slide 3"></div>

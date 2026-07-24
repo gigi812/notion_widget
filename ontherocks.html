@@ -58,12 +58,13 @@
 
   .carousel-slide {
     flex: 0 0 calc((100% - (var(--visible) - 1) * var(--gap)) / var(--visible));
-    aspect-ratio: 2 / 3; /* 세로 3:2 프레임 */
-    border-radius: var(--frame-radius);
+    .carousel-frame {
+    position: relative;
+    width: 100%;
+    height: 420px; /* 원하는 고정 높이로 지정 (px 값 조절 가능) */
     overflow: hidden;
-    background: transparent;
-  }
-
+    border-radius: var(--frame-radius);
+}
   .carousel-slide img {
     width: 100%;
     height: 100%;

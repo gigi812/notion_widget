@@ -38,12 +38,13 @@
     position: relative;
   }
 
-  .carousel-frame {
-    position: relative;
-    width: 100%;
-    overflow: hidden;
-    border-radius: var(--frame-radius);
-  }
+ .carousel-frame {
+  position: relative;
+  width: 100%;
+  height: 420px;
+  overflow: hidden;
+  border-radius: var(--frame-radius);
+}
 
   .carousel-track {
     display: flex;
@@ -56,24 +57,21 @@
     cursor: grabbing;
   }
 
-  .carousel-slide {
-    flex: 0 0 calc((100% - (var(--visible) - 1) * var(--gap)) / var(--visible));
-    .carousel-frame {
-    position: relative;
-    width: 100%;
-    height: 420px; /* 원하는 고정 높이로 지정 (px 값 조절 가능) */
-    overflow: hidden;
-    border-radius: var(--frame-radius);
+ .carousel-slide {
+  flex: 0 0 calc((100% - (var(--visible) - 1) * var(--gap)) / var(--visible));
+  height: 100%;
+  border-radius: var(--frame-radius);
+  overflow: hidden;
+  background: transparent;
 }
-  .carousel-slide img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    pointer-events: none;
-    -webkit-user-drag: none;
-  }
-
+.carousel-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
   .carousel-arrow {
     position: absolute;
     top: 50%;

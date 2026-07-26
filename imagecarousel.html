@@ -8,27 +8,38 @@
   :root {
     --dot: #d9d9d9;
     --dot-active: #222222;
-    --arrow-bg: rgba(255, 255, 255, 0.9);
+    --arrow-bg: rgba(255, 255, 255, 0.3);
     --arrow-fg: #222222;
     --frame-radius: 12px;
+    --gap: 12px;
+    --visible: 3; /* 데스크톱: 한 번에 3장 */
+    --frame-height: 320px; /* 프레임 고정 높이. 필요하면 이 숫자만 조절하세요 */
+  }
+
+  @media (max-width: 640px) {
+    :root {
+      --visible: 1; /* 모바일: 한 번에 1장 */
+      /* 높이는 여기서 바꾸지 않습니다. Notion 임베드 박스의 높이는
+         기기와 상관없이 고정값이라서, 안쪽 코드 높이도 항상 동일해야
+         잘리지 않습니다. */
+    }
   }
 
   * { box-sizing: border-box; }
 
   body {
     margin: 0;
+    background: transparent;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
-    padding: 40px 16px;
+    padding: 8px 16px;
   }
 
-  /* ===== Carousel ===== */
   .carousel {
     width: 100%;
-    max-width: 420px;
+    max-width: 900px;
     margin: 0 auto;
     position: relative;
   }
@@ -36,17 +47,17 @@
   .carousel-frame {
     position: relative;
     width: 100%;
-    aspect-ratio: 2 / 3; /* 세로 3:2 (height:width = 3:2) */
+    height: var(--frame-height); /* 너비가 바뀌어도 높이는 고정 */
     overflow: hidden;
     border-radius: var(--frame-radius);
   }
 
   .carousel-track {
     display: flex;
+    gap: var(--gap);
     height: 100%;
     touch-action: pan-y;
     cursor: grab;
-    /* transform / transition set via JS */
   }
 
   .carousel-track.dragging {
@@ -54,21 +65,22 @@
   }
 
   .carousel-slide {
-    flex: 0 0 100%;
-    height: 100%;
-    user-select: none;
+    flex: 0 0 calc((100% - (var(--visible) - 1) * var(--gap)) / var(--visible));
+    height: 100%; /* aspect-ratio 대신 프레임 높이를 그대로 따라감 */
+    border-radius: var(--frame-radius);
+    overflow: hidden;
+    background: transparent;
   }
 
   .carousel-slide img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain; /* 잘리지 않고 비율 유지하며 프레임 안에 맞춰짐 */
     display: block;
     pointer-events: none;
     -webkit-user-drag: none;
   }
 
-  /* ===== Arrows ===== */
   .carousel-arrow {
     position: absolute;
     top: 50%;
@@ -89,7 +101,7 @@
   }
 
   .carousel-arrow:hover {
-    background: #ffffff;
+    background: rgba(255, 255, 255, 0.3);
   }
 
   .carousel-arrow:disabled {
@@ -97,15 +109,19 @@
     pointer-events: none;
   }
 
-  .carousel-arrow.prev { left: 10px; }
-  .carousel-arrow.next { right: 10px; }
+  .carousel-arrow.prev { left: -6px; }
+  .carousel-arrow.next { right: -6px; }
+
+  @media (max-width: 640px) {
+    .carousel-arrow.prev { left: 6px; }
+    .carousel-arrow.next { right: 6px; }
+  }
 
   .carousel-arrow svg {
     width: 16px;
     height: 16px;
   }
 
-  /* ===== Dots ===== */
   .carousel-dots {
     display: flex;
     justify-content: center;
@@ -129,10 +145,6 @@
     width: 18px;
     border-radius: 3px;
   }
-
-  @media (max-width: 480px) {
-    .carousel-arrow { width: 32px; height: 32px; }
-  }
 </style>
 </head>
 <body>
@@ -141,10 +153,9 @@
     <div class="carousel-frame">
       <div class="carousel-track" id="carouselTrack">
         <!-- 이미지 3~5장: src만 교체하세요 -->
-        <div class="carousel-slide"><img src="https://picsum.photos/id/1015/800/1200" alt="slide 1"></div>
-        <div class="carousel-slide"><img src="https://picsum.photos/id/1016/800/1200" alt="slide 2"></div>
-        <div class="carousel-slide"><img src="https://picsum.photos/id/1018/800/1200" alt="slide 3"></div>
-        <div class="carousel-slide"><img src="https://picsum.photos/id/1019/800/1200" alt="slide 4"></div>
+        <div class="carousel-slide"><img src="./images/1.jpg" alt="slide 1"></div>
+        <div class="carousel-slide"><img src="./images/2.jpg" alt="slide 2"></div>
+        <div class="carousel-slide"><img src="./images/3.jpg" alt="slide 3"></div>
       </div>
 
       <button class="carousel-arrow prev" id="prevBtn" aria-label="Previous image">
@@ -160,6 +171,7 @@
 
 <script>
 (function () {
+  const frame = document.querySelector('.carousel-frame');
   const track = document.getElementById('carouselTrack');
   const slides = Array.from(track.children);
   const dotsWrap = document.getElementById('carouselDots');
@@ -175,41 +187,63 @@
   let startX = 0;
   let currentX = 0;
   let isDragging = false;
-  let frameWidth = track.parentElement.clientWidth;
 
-  // dots 생성
-  slides.forEach((_, i) => {
-    const dot = document.createElement('button');
-    dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
-    dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
-    dot.addEventListener('click', () => goTo(i));
-    dotsWrap.appendChild(dot);
-  });
-  const dots = Array.from(dotsWrap.children);
+  function getVisible() {
+    const v = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--visible'));
+    return Math.min(v || 1, count);
+  }
+
+  function getStep() {
+    const visible = getVisible();
+    const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 0;
+    const frameWidth = frame.clientWidth;
+    const slideWidth = (frameWidth - gap * (visible - 1)) / visible;
+    return slideWidth + gap;
+  }
+
+  function maxIndex() {
+    return Math.max(0, count - getVisible());
+  }
+
+  function buildDots() {
+    dotsWrap.innerHTML = '';
+    const pages = maxIndex() + 1;
+    for (let i = 0; i < pages; i++) {
+      const dot = document.createElement('button');
+      dot.className = 'carousel-dot' + (i === index ? ' active' : '');
+      dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+      dot.addEventListener('click', () => goTo(i));
+      dotsWrap.appendChild(dot);
+    }
+  }
 
   function updateUI() {
     track.style.transition = 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)';
-    track.style.transform = `translateX(${-index * frameWidth}px)`;
-    dots.forEach((d, i) => d.classList.toggle('active', i === index));
+    track.style.transform = `translateX(${-index * getStep()}px)`;
+    Array.from(dotsWrap.children).forEach((d, i) => d.classList.toggle('active', i === index));
     prevBtn.disabled = index === 0;
-    nextBtn.disabled = index === count - 1;
+    nextBtn.disabled = index === maxIndex();
   }
 
   function goTo(i) {
-    index = Math.max(0, Math.min(count - 1, i));
+    index = Math.max(0, Math.min(maxIndex(), i));
     updateUI();
   }
 
   prevBtn.addEventListener('click', () => goTo(index - 1));
   nextBtn.addEventListener('click', () => goTo(index + 1));
 
+  let resizeTimer;
   window.addEventListener('resize', () => {
-    frameWidth = track.parentElement.clientWidth;
-    track.style.transition = 'none';
-    track.style.transform = `translateX(${-index * frameWidth}px)`;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      index = Math.min(index, maxIndex());
+      buildDots();
+      track.style.transition = 'none';
+      track.style.transform = `translateX(${-index * getStep()}px)`;
+    }, 100);
   });
 
-  // ===== 스와이프 (터치 + 마우스 드래그) =====
   function dragStart(x) {
     isDragging = true;
     startX = x;
@@ -221,7 +255,7 @@
   function dragMove(x) {
     if (!isDragging) return;
     currentX = x - startX;
-    track.style.transform = `translateX(${-index * frameWidth + currentX}px)`;
+    track.style.transform = `translateX(${-index * getStep() + currentX}px)`;
   }
 
   function dragEnd() {
@@ -229,8 +263,8 @@
     isDragging = false;
     track.classList.remove('dragging');
 
-    const threshold = frameWidth * 0.15;
-    if (currentX < -threshold && index < count - 1) {
+    const threshold = getStep() * 0.2;
+    if (currentX < -threshold && index < maxIndex()) {
       index++;
     } else if (currentX > threshold && index > 0) {
       index--;
@@ -238,16 +272,15 @@
     updateUI();
   }
 
-  // touch
   track.addEventListener('touchstart', (e) => dragStart(e.touches[0].clientX), { passive: true });
   track.addEventListener('touchmove', (e) => dragMove(e.touches[0].clientX), { passive: true });
   track.addEventListener('touchend', dragEnd);
 
-  // mouse
   track.addEventListener('mousedown', (e) => { e.preventDefault(); dragStart(e.clientX); });
   window.addEventListener('mousemove', (e) => dragMove(e.clientX));
   window.addEventListener('mouseup', dragEnd);
 
+  buildDots();
   updateUI();
 })();
 </script>

@@ -13,6 +13,7 @@
     --frame-radius: 12px;
     --gap: 12px;
     --visible: 3; /* 데스크톱: 한 번에 3장 */
+    --row-gap: 16px; /* row 사이 간격, 줄이고 싶으면 이 숫자만 조절 */
   }
 
   @media (max-width: 640px) {
@@ -23,19 +24,26 @@
 
   body {
     margin: 0;
-    background: transparent; /* 배경 없음 */
+    background: transparent;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 10vh;
     padding: 24px 16px;
+  }
+
+  /* ===== Row 컨테이너: 캐러셀 여러 개를 세로로 쌓음 ===== */
+  .carousel-rows {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--row-gap);
   }
 
   .carousel {
     width: 100%;
-    max-width: 900px; /* 데스크톱에서 3장 보여줄 만큼 넓게 */
-    margin: 0 auto;
     position: relative;
   }
 
@@ -119,7 +127,7 @@
     display: flex;
     justify-content: center;
     gap: 8px;
-    margin-top: 16px;
+    margin-top: 12px;
   }
 
   .carousel-dot {
@@ -142,140 +150,172 @@
 </head>
 <body>
 
-  <div class="carousel" id="carousel">
-    <div class="carousel-frame">
-      <div class="carousel-track" id="carouselTrack">
-        <!-- 이미지 3~5장: src만 교체하세요 -->
-        
-        <div class="carousel-slide"><img src="./images/30.13 (6).jpg" alt="slide 1"></div>
-        <div class="carousel-slide"><img src="./images/30.13 (7).jpg" alt="slide 2"></div>
-        <div class="carousel-slide"><img src="./images/30.13 (8).jpg" alt="slide 3"></div>
+  <div class="carousel-rows">
+
+    <!-- ===== Row 1 ===== -->
+    <div class="carousel">
+      <div class="carousel-frame">
+        <div class="carousel-track">
+          <!-- Row 1 이미지: src만 교체하세요 -->
+          <div class="carousel-slide"><img src="./images/30.13 (1).jpg" alt="row1 slide 1"></div>
+          <div class="carousel-slide"><img src="./images/30.13 (2).jpg" alt="row1 slide 2"></div>
+          <div class="carousel-slide"><img src="./images/30.13 (3).jpg" alt="row1 slide 3"></div>
+          <div class="carousel-slide"><img src="./images/30.13 (4).jpg" alt="row2 slide 3"></div>
+          <div class="carousel-slide"><img src="./images/30.13 (5).jpg" alt="row2 slide 3"></div>
+        </div>
+
+        <button class="carousel-arrow prev" aria-label="Previous image">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <button class="carousel-arrow next" aria-label="Next image">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
       </div>
 
-      <button class="carousel-arrow prev" id="prevBtn" aria-label="Previous image">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-      </button>
-      <button class="carousel-arrow next" id="nextBtn" aria-label="Next image">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-      </button>
+      <div class="carousel-dots"></div>
     </div>
 
-    <div class="carousel-dots" id="carouselDots"></div>
+    <!-- ===== Row 2 ===== -->
+    <div class="carousel">
+      <div class="carousel-frame">
+        <div class="carousel-track">
+          <!-- Row 2 이미지: src만 교체하세요 -->
+          <div class="carousel-slide"><img src="./images/30.13 (6).jpg" alt="row2 slide 1"></div>
+          <div class="carousel-slide"><img src="./images/30.13 (7).jpg" alt="row2 slide 2"></div>
+          <div class="carousel-slide"><img src="./images/30.13 (8).jpg" alt="row2 slide 3"></div>
+        </div>
+
+        <button class="carousel-arrow prev" aria-label="Previous image">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <button class="carousel-arrow next" aria-label="Next image">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+      </div>
+
+      <div class="carousel-dots"></div>
+    </div>
+
   </div>
 
 <script>
 (function () {
-  const frame = document.querySelector('.carousel-frame');
-  const track = document.getElementById('carouselTrack');
-  const slides = Array.from(track.children);
-  const dotsWrap = document.getElementById('carouselDots');
-  const prevBtn = document.getElementById('prevBtn');
-  const nextBtn = document.getElementById('nextBtn');
+  // 페이지 안의 .carousel 요소 각각을 독립적으로 초기화
+  document.querySelectorAll('.carousel').forEach(initCarousel);
 
-  const count = slides.length;
-  if (count < 3 || count > 5) {
-    console.warn('이미지는 최소 3개, 최대 5개를 권장합니다. 현재:', count);
-  }
+  function initCarousel(carousel) {
+    const frame = carousel.querySelector('.carousel-frame');
+    const track = carousel.querySelector('.carousel-track');
+    const slides = Array.from(track.children);
+    const dotsWrap = carousel.querySelector('.carousel-dots');
+    const prevBtn = carousel.querySelector('.carousel-arrow.prev');
+    const nextBtn = carousel.querySelector('.carousel-arrow.next');
 
-  let index = 0;
-  let startX = 0;
-  let currentX = 0;
-  let isDragging = false;
-
-  function getVisible() {
-    const v = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--visible'));
-    return Math.min(v || 1, count);
-  }
-
-  function getStep() {
-    const visible = getVisible();
-    const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 0;
-    const frameWidth = frame.clientWidth;
-    const slideWidth = (frameWidth - gap * (visible - 1)) / visible;
-    return slideWidth + gap;
-  }
-
-  function maxIndex() {
-    return Math.max(0, count - getVisible());
-  }
-
-  function buildDots() {
-    dotsWrap.innerHTML = '';
-    const pages = maxIndex() + 1;
-    for (let i = 0; i < pages; i++) {
-      const dot = document.createElement('button');
-      dot.className = 'carousel-dot' + (i === index ? ' active' : '');
-      dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
-      dot.addEventListener('click', () => goTo(i));
-      dotsWrap.appendChild(dot);
+    const count = slides.length;
+    if (count < 3 || count > 5) {
+      console.warn('이미지는 최소 3개, 최대 5개를 권장합니다. 현재:', count);
     }
-  }
 
-  function updateUI() {
-    track.style.transition = 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)';
-    track.style.transform = `translateX(${-index * getStep()}px)`;
-    Array.from(dotsWrap.children).forEach((d, i) => d.classList.toggle('active', i === index));
-    prevBtn.disabled = index === 0;
-    nextBtn.disabled = index === maxIndex();
-  }
+    let index = 0;
+    let startX = 0;
+    let currentX = 0;
+    let isDragging = false;
 
-  function goTo(i) {
-    index = Math.max(0, Math.min(maxIndex(), i));
-    updateUI();
-  }
+    function getVisible() {
+      const v = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--visible'));
+      return Math.min(v || 1, count);
+    }
 
-  prevBtn.addEventListener('click', () => goTo(index - 1));
-  nextBtn.addEventListener('click', () => goTo(index + 1));
+    function getStep() {
+      const visible = getVisible();
+      const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 0;
+      const frameWidth = frame.clientWidth;
+      const slideWidth = (frameWidth - gap * (visible - 1)) / visible;
+      return slideWidth + gap;
+    }
 
-  let resizeTimer;
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => {
-      index = Math.min(index, maxIndex());
-      buildDots();
-      track.style.transition = 'none';
+    function maxIndex() {
+      return Math.max(0, count - getVisible());
+    }
+
+    function buildDots() {
+      dotsWrap.innerHTML = '';
+      const pages = maxIndex() + 1;
+      for (let i = 0; i < pages; i++) {
+        const dot = document.createElement('button');
+        dot.className = 'carousel-dot' + (i === index ? ' active' : '');
+        dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+        dot.addEventListener('click', () => goTo(i));
+        dotsWrap.appendChild(dot);
+      }
+    }
+
+    function updateUI() {
+      track.style.transition = 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)';
       track.style.transform = `translateX(${-index * getStep()}px)`;
-    }, 100);
-  });
-
-  function dragStart(x) {
-    isDragging = true;
-    startX = x;
-    currentX = 0;
-    track.classList.add('dragging');
-    track.style.transition = 'none';
-  }
-
-  function dragMove(x) {
-    if (!isDragging) return;
-    currentX = x - startX;
-    track.style.transform = `translateX(${-index * getStep() + currentX}px)`;
-  }
-
-  function dragEnd() {
-    if (!isDragging) return;
-    isDragging = false;
-    track.classList.remove('dragging');
-
-    const threshold = getStep() * 0.2;
-    if (currentX < -threshold && index < maxIndex()) {
-      index++;
-    } else if (currentX > threshold && index > 0) {
-      index--;
+      Array.from(dotsWrap.children).forEach((d, i) => d.classList.toggle('active', i === index));
+      prevBtn.disabled = index === 0;
+      nextBtn.disabled = index === maxIndex();
     }
+
+    function goTo(i) {
+      index = Math.max(0, Math.min(maxIndex(), i));
+      updateUI();
+    }
+
+    prevBtn.addEventListener('click', () => goTo(index - 1));
+    nextBtn.addEventListener('click', () => goTo(index + 1));
+
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        index = Math.min(index, maxIndex());
+        buildDots();
+        track.style.transition = 'none';
+        track.style.transform = `translateX(${-index * getStep()}px)`;
+      }, 100);
+    });
+
+    function dragStart(x) {
+      isDragging = true;
+      startX = x;
+      currentX = 0;
+      track.classList.add('dragging');
+      track.style.transition = 'none';
+    }
+
+    function dragMove(x) {
+      if (!isDragging) return;
+      currentX = x - startX;
+      track.style.transform = `translateX(${-index * getStep() + currentX}px)`;
+    }
+
+    function dragEnd() {
+      if (!isDragging) return;
+      isDragging = false;
+      track.classList.remove('dragging');
+
+      const threshold = getStep() * 0.2;
+      if (currentX < -threshold && index < maxIndex()) {
+        index++;
+      } else if (currentX > threshold && index > 0) {
+        index--;
+      }
+      updateUI();
+    }
+
+    track.addEventListener('touchstart', (e) => dragStart(e.touches[0].clientX), { passive: true });
+    track.addEventListener('touchmove', (e) => dragMove(e.touches[0].clientX), { passive: true });
+    track.addEventListener('touchend', dragEnd);
+
+    track.addEventListener('mousedown', (e) => { e.preventDefault(); dragStart(e.clientX); });
+    window.addEventListener('mousemove', (e) => dragMove(e.clientX));
+    window.addEventListener('mouseup', dragEnd);
+
+    buildDots();
     updateUI();
   }
-
-  track.addEventListener('touchstart', (e) => dragStart(e.touches[0].clientX), { passive: true });
-  track.addEventListener('touchmove', (e) => dragMove(e.touches[0].clientX), { passive: true });
-  track.addEventListener('touchend', dragEnd);
-
-  track.addEventListener('mousedown', (e) => { e.preventDefault(); dragStart(e.clientX); });
-  window.addEventListener('mousemove', (e) => dragMove(e.clientX));
-  window.addEventListener('mouseup', dragEnd);
-
-  buildDots();
-  updateUI();
 })();
 </script>
 
